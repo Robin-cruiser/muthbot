@@ -1,4 +1,4 @@
-Const mineflayer = require('mineflayer');
+const mineflayer = require('mineflayer');
 const http = require('http');
 
 // Keep Render awake
