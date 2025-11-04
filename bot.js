@@ -7,7 +7,7 @@ const SERVER = 'muthserver.aternos.me'
 const PORT = 25565
 const PASSWORD = 'njbruto'
 const JUMP_INTERVAL = 30 * 1000
-const SWITCH_DELAY = 60 * 60 * 1000 // after 1h, try to summon the other
+const SWITCH_DELAY = 60 * 60 * 1000 // 1 hour
 
 let active = 'Muth'
 let bot
@@ -26,7 +26,7 @@ function createBot(name) {
     b.chat(`/register ${PASSWORD} ${PASSWORD}`)
     setTimeout(() => b.chat(`/login ${PASSWORD}`), 2000)
 
-    // Anti-AFK
+    // Anti-AFK jump
     setInterval(() => {
       if (b.entity) {
         b.setControlState('jump', true)
@@ -34,7 +34,7 @@ function createBot(name) {
       }
     }, JUMP_INTERVAL)
 
-    // After 1 hour, tell the next bot to join (but stay until it joins)
+    // After 1 hour, call next bot
     setTimeout(() => {
       const next = name === 'Muth' ? 'Kali' : 'Muth'
       console.log(`${name}'s shift done. Summoning ${next}...`)
@@ -42,7 +42,7 @@ function createBot(name) {
     }, SWITCH_DELAY)
   })
 
-  // Leave only when you *see* the other bot join
+  // Leave only if the other bot joins
   b.on('chat', (username, message) => {
     if (
       (name === 'Muth' && message.includes('Kali joined the game')) ||
@@ -50,11 +50,16 @@ function createBot(name) {
     ) {
       console.log(`${name} saw ${message}, leaving now.`)
       b.quit()
-      setTimeout(() => swap(), 5000) // wait 5s before reconnect
+      setTimeout(() => swap(), 10000) // reconnect after 10s
     }
   })
 
-  b.on('kicked', reason => console.log(`${name} kicked:`, reason))
+  b.on('kicked', reason => {
+    console.log(`${name} kicked:`, reason)
+    console.log('Retrying in 10 seconds...')
+    setTimeout(() => swap(), 10000)
+  })
+
   b.on('error', err => console.log(`Error: ${err.message}`))
   b.on('end', () => console.log(`${name} disconnected.`))
 
@@ -62,22 +67,21 @@ function createBot(name) {
 }
 
 function summonNext(next) {
-  // Just switch the active name — the new bot will connect separately
   if (active !== next) {
     console.log(`Preparing ${next} to join...`)
     active = next
     setTimeout(() => {
       bot = createBot(active)
-    }, 10000) // wait 10 seconds before connecting to avoid throttle
+    }, 10000)
   }
 }
 
 function swap() {
   active = active === 'Muth' ? 'Kali' : 'Muth'
-  console.log(`Switching to ${active}...`)
+  console.log(`Switching to ${active} in 10 seconds...`)
   setTimeout(() => {
     bot = createBot(active)
-  }, 10000) // short delay between connections
+  }, 10000)
 }
 
 // Start the first bot
