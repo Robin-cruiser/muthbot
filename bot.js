@@ -1,34 +1,31 @@
-// ---- Imports ----
 const mineflayer = require('mineflayer')
 const express = require('express')
 
-// ---- Settings ----
 const SERVER = 'muthserver.aternos.me'
 const MC_PORT = 25565
 const PASSWORD = 'njbruto'
-const JUMP_INTERVAL = 30 * 1000      // 30 s
-const SWITCH_DELAY = 60 * 60 * 1000  // 1 h
-const RECONNECT_DELAY = 10000        // 10 s
+const JUMP_INTERVAL = 30 * 1000
+const SWITCH_DELAY = 60 * 60 * 1000
+const RECONNECT_DELAY = 10000
 
 let active = 'Muth'
 let bot
 
-// ---- Bot Creation ----
 function createBot(name) {
   console.log(`Connecting ${name}...`)
   const b = mineflayer.createBot({
     host: SERVER,
     port: MC_PORT,
     username: name,
-    auth: 'offline'
+    auth: 'offline',
   })
 
   b.on('spawn', () => {
-    console.log(`${name} joined.`)
+    console.log(`${name} joined the server.`)
     b.chat(`/register ${PASSWORD} ${PASSWORD}`)
     setTimeout(() => b.chat(`/login ${PASSWORD}`), 2000)
 
-    // Anti-AFK jumping
+    // Anti-AFK jump
     setInterval(() => {
       try {
         b.setControlState('jump', true)
@@ -36,7 +33,7 @@ function createBot(name) {
       } catch {}
     }, JUMP_INTERVAL)
 
-    // After 1 h, summon the other bot
+    // After 1 hour, trigger next bot
     setTimeout(() => {
       const next = name === 'Muth' ? 'Kali' : 'Muth'
       console.log(`${name}'s shift done → Summoning ${next}`)
@@ -44,17 +41,24 @@ function createBot(name) {
     }, SWITCH_DELAY)
   })
 
-  // ---- Chat detection (case-insensitive, multi-format) ----
-  b.on('chat', (user, msg) => {
-    const lower = msg.toLowerCase()
+  // Detect join messages (system or chat)
+  const detectJoin = msg => {
+    const text = msg.toLowerCase()
     if (
-      (name === 'Muth' && (lower.includes('kali joined') || lower.includes('kali has joined'))) ||
-      (name === 'Kali' && (lower.includes('muth joined') || lower.includes('muth has joined')))
+      (name === 'Muth' && text.includes('kali')) ||
+      (name === 'Kali' && text.includes('muth'))
     ) {
-      console.log(`${name} detected "${msg}", leaving...`)
-      b.quit()
-      setTimeout(() => swap(), RECONNECT_DELAY)
+      if (text.includes('joined') || text.includes('has joined')) {
+        console.log(`${name} detected that the other joined → leaving...`)
+        b.quit()
+        setTimeout(() => swap(), RECONNECT_DELAY)
+      }
     }
+  }
+
+  b.on('chat', (_, message) => detectJoin(message))
+  b.on('message', message => {
+    if (message?.toString) detectJoin(message.toString())
   })
 
   b.on('kicked', reason => {
@@ -68,7 +72,6 @@ function createBot(name) {
   return b
 }
 
-// ---- Helpers ----
 function summonNext(next) {
   if (active !== next) {
     console.log(`Preparing ${next} to join...`)
@@ -83,11 +86,11 @@ function swap() {
   setTimeout(() => (bot = createBot(active)), RECONNECT_DELAY)
 }
 
-// ---- Start ----
+// Start first bot
 bot = createBot(active)
 
-// ---- Keep Render Alive ----
+// Keep Render alive
 const app = express()
-app.get('/', (_, res) => res.send('✅ MuthBot is running!'))
+app.get('/', (_, res) => res.send('✅ MuthBot is active.'))
 const WEB_PORT = process.env.PORT || 3000
 app.listen(WEB_PORT, () => console.log(`🌐 Web server on ${WEB_PORT}`))
