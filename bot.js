@@ -2,7 +2,7 @@ const mineflayer = require('mineflayer')
 
 const SERVER = 'muthserver.aternos.me'
 const PORT = 25565
-const PASSWORD = 'pass'
+const PASSWORD = 'njbruto'
 const JUMP_INTERVAL = 30 * 1000
 const SWITCH_DELAY = 60 * 60 * 1000 // after 1h, try to summon the other
 
