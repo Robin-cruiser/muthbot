@@ -1,22 +1,24 @@
+// === Minecraft Bot Switcher (Render Ready) ===
 const mineflayer = require('mineflayer')
-const fs = require('fs')
+const express = require('express')
 
-const config = JSON.parse(fs.readFileSync('./config.json', 'utf8'))
-
+// ---- Settings ----
 const SERVER = 'muthserver.aternos.me'
-const PORT = 25565
+const MC_PORT = 25565
 const PASSWORD = 'njbruto'
-const JUMP_INTERVAL = 30 * 1000
-const SWITCH_DELAY = 60 * 60 * 1000 // 1 hour
+const JUMP_INTERVAL = 30 * 1000 // jump every 30s to avoid AFK
+const SWITCH_DELAY = 60 * 60 * 1000 // swap every 1 hour
+const RECONNECT_DELAY = 10000 // reconnect after 10s if kicked
 
 let active = 'Muth'
 let bot
 
+// ---- Bot Logic ----
 function createBot(name) {
   console.log(`Connecting ${name}...`)
   const b = mineflayer.createBot({
     host: SERVER,
-    port: PORT,
+    port: MC_PORT,
     username: name,
     auth: 'offline'
   })
@@ -26,7 +28,7 @@ function createBot(name) {
     b.chat(`/register ${PASSWORD} ${PASSWORD}`)
     setTimeout(() => b.chat(`/login ${PASSWORD}`), 2000)
 
-    // Anti-AFK jump
+    // Anti-AFK
     setInterval(() => {
       if (b.entity) {
         b.setControlState('jump', true)
@@ -34,7 +36,7 @@ function createBot(name) {
       }
     }, JUMP_INTERVAL)
 
-    // After 1 hour, call next bot
+    // Summon the next bot after 1 hour
     setTimeout(() => {
       const next = name === 'Muth' ? 'Kali' : 'Muth'
       console.log(`${name}'s shift done. Summoning ${next}...`)
@@ -42,22 +44,22 @@ function createBot(name) {
     }, SWITCH_DELAY)
   })
 
-  // Leave only if the other bot joins
+  // Leave only when the other bot joins
   b.on('chat', (username, message) => {
     if (
       (name === 'Muth' && message.includes('Kali joined the game')) ||
       (name === 'Kali' && message.includes('Muth joined the game'))
     ) {
-      console.log(`${name} saw ${message}, leaving now.`)
+      console.log(`${name} saw "${message}", leaving now.`)
       b.quit()
-      setTimeout(() => swap(), 10000) // reconnect after 10s
+      setTimeout(() => swap(), RECONNECT_DELAY)
     }
   })
 
   b.on('kicked', reason => {
-    console.log(`${name} kicked:`, reason)
-    console.log('Retrying in 10 seconds...')
-    setTimeout(() => swap(), 10000)
+    console.log(`${name} kicked: ${reason}`)
+    console.log(`Retrying in ${RECONNECT_DELAY / 1000}s...`)
+    setTimeout(() => swap(), RECONNECT_DELAY)
   })
 
   b.on('error', err => console.log(`Error: ${err.message}`))
@@ -66,32 +68,30 @@ function createBot(name) {
   return b
 }
 
+// ---- Helpers ----
 function summonNext(next) {
   if (active !== next) {
     console.log(`Preparing ${next} to join...`)
     active = next
     setTimeout(() => {
       bot = createBot(active)
-    }, 10000)
+    }, RECONNECT_DELAY)
   }
 }
 
 function swap() {
   active = active === 'Muth' ? 'Kali' : 'Muth'
-  console.log(`Switching to ${active} in 10 seconds...`)
+  console.log(`Switching to ${active} in ${RECONNECT_DELAY / 1000}s...`)
   setTimeout(() => {
     bot = createBot(active)
-  }, 10000)
+  }, RECONNECT_DELAY)
 }
 
-// Start the first bot
+// ---- Start ----
 bot = createBot(active)
 
-// Keep Render alive (required)
-const express = require('express')
+// ---- Keep Render Alive ----
 const app = express()
-
-app.get('/', (req, res) => res.send('✅ MuthBot is running and connected to the server!'))
-
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`🌐 Web server active on port ${PORT}`))
+app.get('/', (req, res) => res.send('✅ MuthBot is alive and running!'))
+const WEB_PORT = process.env.PORT || 3000
+app.listen(WEB_PORT, () => console.log(`🌐 Web server active on port ${WEB_PORT}`
