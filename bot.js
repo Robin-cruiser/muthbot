@@ -44,13 +44,14 @@ function createBot(name) {
     }, SWITCH_DELAY)
   })
 
-  // Leave only when the other joins
+  // ---- Chat detection (case-insensitive, multi-format) ----
   b.on('chat', (user, msg) => {
+    const lower = msg.toLowerCase()
     if (
-      (name === 'Muth' && msg.includes('Kali joined')) ||
-      (name === 'Kali' && msg.includes('Muth joined'))
+      (name === 'Muth' && (lower.includes('kali joined') || lower.includes('kali has joined'))) ||
+      (name === 'Kali' && (lower.includes('muth joined') || lower.includes('muth has joined')))
     ) {
-      console.log(`${name} saw "${msg}", leaving...`)
+      console.log(`${name} detected "${msg}", leaving...`)
       b.quit()
       setTimeout(() => swap(), RECONNECT_DELAY)
     }
