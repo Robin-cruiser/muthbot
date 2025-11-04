@@ -86,3 +86,12 @@ function swap() {
 
 // Start the first bot
 bot = createBot(active)
+
+// Keep Render alive (required)
+const express = require('express')
+const app = express()
+
+app.get('/', (req, res) => res.send('✅ MuthBot is running and connected to the server!'))
+
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => console.log(`🌐 Web server active on port ${PORT}`))
