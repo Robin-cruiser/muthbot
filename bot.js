@@ -1,5 +1,7 @@
 const mineflayer = require('mineflayer')
 
+const config = JSON.parse(fs.readFileSync('./config.json', 'utf8'))
+
 const SERVER = 'muthserver.aternos.me'
 const PORT = 25565
 const PASSWORD = 'njbruto'
