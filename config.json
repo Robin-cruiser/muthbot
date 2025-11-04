@@ -1,14 +1,19 @@
 {
   "server": {
     "host": "muthserver.aternos.me",
-    "port": 25565,
-    "version": false
+    "port": 25565
   },
-  "bot": {
-    "username": "afkbot7"
+  "auth": {
+    "cracked": true,
+    "password": "njbruto"
   },
-  "reconnect": {
-    "enabled": true,
-    "delay": 3000
+  "bots": {
+    "first": "Muth",
+    "second": "Kali"
+  },
+  "timing": {
+    "switchDelay": 3600000,
+    "jumpInterval": 30000,
+    "reconnectDelay": 10000
   }
 }
