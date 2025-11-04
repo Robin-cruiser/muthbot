@@ -1,14 +1,18 @@
 {
-  "name": "Muth",
+  "name": "minecraft-switch-bot",
   "version": "1.0.0",
+  "description": "A dual Minecraft bot that alternates between Muth and Kali for cracked servers.",
   "main": "bot.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node bot.js"
   },
   "dependencies": {
-    "mineflayer": "^4.16.0"
+    "mineflayer": "^4.16.2"
   },
   "engines": {
-    "node": ">=18"
-  }
+    "node": ">=18.0.0"
+  },
+  "author": "Nirmu_G",
+  "license": "MIT"
 }
